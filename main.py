@@ -1,4 +1,4 @@
-from src.scratch.word2vec.train import main
+from src.trainer.raw.scratch import main
 
 if __name__ == "__main__":
     main()

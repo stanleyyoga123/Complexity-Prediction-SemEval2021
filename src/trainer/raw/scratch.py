@@ -10,11 +10,11 @@ from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau
 
 from src.constant import Path
-from src.utility import get_config, get_latest_version
+from src.utility import get_config, get_latest_version, json_to_text
 from src.embedder import Word2VecEmbedder
 from src.loader import RawScratchLoader
 from src.regressor import RawRegressor
-
+from src.evaluator import Evaluator
 
 class Trainer:
     def __init__(self):
@@ -124,6 +124,17 @@ class Trainer:
         df_train.to_csv(os.path.join(self.folder_path, "pred_train.csv"), index=False)
         df_dev.to_csv(os.path.join(self.folder_path, "pred_dev.csv"), index=False)
         df_test.to_csv(os.path.join(self.folder_path, "pred_test.csv"), index=False)
+
+        # Evaluate
+        train_eval = Evaluator.eval(self.data["y_train"], df_train["complexity"])
+        dev_eval = Evaluator.eval(self.data["y_dev"], df_dev["complexity"])
+        test_eval = Evaluator.eval(self.data["y_test"], df_test["complexity"])
+
+        with open(os.path.join(self.folder_path, "evaluation.txt"), "w+") as f:
+            msg = f"Train\n{json_to_text(train_eval)}\n\n"
+            msg += f"Dev\n{json_to_text(dev_eval)}\n\n"
+            msg += f"Test\n{json_to_text(test_eval)}"
+            f.write(msg)
 
 
 def main():

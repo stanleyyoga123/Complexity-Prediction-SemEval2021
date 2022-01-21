@@ -34,3 +34,10 @@ def get_latest_version(folder, prefix, mode="patch"):
         return f"{major}.{minor}.{patch+1}"
     else:
         raise ValueError("only support (major | minor | patch)")
+
+
+def json_to_text(json):
+    msg = ""
+    for key, val in json.items():
+        msg += f"{key}: {val}\n"
+    return msg

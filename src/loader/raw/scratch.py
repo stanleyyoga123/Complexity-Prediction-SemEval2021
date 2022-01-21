@@ -69,7 +69,7 @@ class RawScratchLoader:
 
         y_train = np.array(self.train["complexity"])
         y_dev = np.array(self.dev["complexity"])
-        y_test = np.array(self.dev["complexity"])
+        y_test = np.array(self.test["complexity"])
 
         train_embedder = np.array(
             [
