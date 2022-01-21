@@ -21,7 +21,7 @@ def get_latest_version(folder, prefix, mode="patch"):
         if file.startswith(prefix):
             version = [int(ver) for ver in file.split("-")[-1].split(".")]
             versions.append(version)
-    
+
     if not versions:
         return "0.0.0"
 

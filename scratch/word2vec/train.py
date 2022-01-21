@@ -7,6 +7,7 @@ import numpy as np
 
 from tensorflow.keras.losses import MeanSquaredError
 from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau
 
 from src.constant import Path
 from src.utility import get_config, get_latest_version
@@ -21,6 +22,12 @@ class Trainer:
         self.prefix = "Word2Vec-Glove"
         self.loader = Loader(self.config["loader"])
         self.embedder = Embedder(self.config["word2vec"])
+        self.__init_folder()
+
+    def __init_folder(self):
+        version = get_latest_version(Path.MODEL, self.prefix, mode=self.config["mode"])
+        self.folder_path = os.path.join(Path.MODEL, f"{self.prefix}-{version}")
+        os.mkdir(self.folder_path)
 
     def fit(self):
         # Load Data
@@ -37,6 +44,21 @@ class Trainer:
             {"embedding": embedding_config, **self.config["classifier"]}
         )
 
+        # Callbacks
+        callbacks = [
+            EarlyStopping(patience=self.config["trainer"]["early_stopping_patience"]),
+            ReduceLROnPlateau(
+                factor=self.config["trainer"]["reduce_lr_factor"],
+                patience=self.config["trainer"]["reduce_lr_patience"],
+                min_lr=self.config["trainer"]["reduce_lr_min"],
+            ),
+            ModelCheckpoint(
+                filepath=os.path.join(self.folder_path, "model-best.h5"),
+                save_best_only=True,
+                save_weights_only=True,
+            ),
+        ]
+
         self.model.compile(
             loss=MeanSquaredError(),
             optimizer=Adam(learning_rate=self.config["trainer"]["lr"]),
@@ -47,6 +69,7 @@ class Trainer:
             batch_size=self.config["trainer"]["batch_size"],
             epochs=self.config["trainer"]["epochs"],
             validation_data=(self.data["X_dev"], self.data["y_dev"]),
+            callbacks=callbacks
         )
 
     def evaluate(self):
@@ -90,25 +113,20 @@ class Trainer:
 
         return df_train, df_dev, df_test
 
-    def save(self, mode):
-        version = get_latest_version(Path.MODEL, self.prefix, mode=mode)
-        folder_path = os.path.join(Path.MODEL, f"{self.prefix}-{version}")
-        os.mkdir(folder_path)
+    def save(self):
+        shutil.copy2(Path.CONFIG_SCRATCH, self.folder_path)
 
-        self.model.save_weights(os.path.join(folder_path, "model.h5"), save_format="h5")
-        shutil.copy2(Path.CONFIG_SCRATCH, folder_path)
-
-        with open(os.path.join(folder_path, "notes.txt"), "w+") as f:
+        with open(os.path.join(self.folder_path, "notes.txt"), "w+") as f:
             msg = f"Experiment datetime: {datetime.now()}"
             f.write(msg)
 
         df_train, df_dev, df_test = self.evaluate()
-        df_train.to_csv(os.path.join(folder_path, "pred_train.csv"), index=False)
-        df_dev.to_csv(os.path.join(folder_path, "pred_dev.csv"), index=False)
-        df_test.to_csv(os.path.join(folder_path, "pred_test.csv"), index=False)
+        df_train.to_csv(os.path.join(self.folder_path, "pred_train.csv"), index=False)
+        df_dev.to_csv(os.path.join(self.folder_path, "pred_dev.csv"), index=False)
+        df_test.to_csv(os.path.join(self.folder_path, "pred_test.csv"), index=False)
 
 
 def main():
     trainer = Trainer()
     trainer.fit()
-    trainer.save("patch")
+    trainer.save()
