@@ -6,6 +6,7 @@ class Path:
     DATA = "data"
     SCRATCH = "scratch"
     PRETRAINED = "pretrained"
+    MODEL = "models"
 
     TRAIN_SINGLE = os.path.join(DATA, "single_train.csv")
     DEV_SINGLE = os.path.join(DATA, "single_dev.csv")

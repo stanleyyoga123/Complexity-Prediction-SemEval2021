@@ -106,4 +106,7 @@ class Loader:
             "y_train": y_train,
             "y_test": y_test,
             "y_dev": y_dev,
+            "train": self.train,
+            "dev": self.dev,
+            "test": self.test,
         }
