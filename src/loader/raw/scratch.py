@@ -80,24 +80,6 @@ class RawScratchLoader:
             ]
         )
 
-        return train_embedder, X_train, X_test, X_dev, y_train, y_test, y_dev
-
-    def tokens_to_texts(self, tokens):
-        return self.tokenizer.sequences_to_texts(tokens)
-
-    def __call__(self):
-        self.__drop_null()
-        self.__fit()
-        (
-            train_embedder,
-            X_train,
-            X_test,
-            X_dev,
-            y_train,
-            y_test,
-            y_dev,
-        ) = self.__tokenize()
-
         return {
             "train_embedder": train_embedder,
             "X_train": X_train,
@@ -106,7 +88,12 @@ class RawScratchLoader:
             "y_train": y_train,
             "y_test": y_test,
             "y_dev": y_dev,
-            "train": self.train,
-            "dev": self.dev,
-            "test": self.test,
         }
+
+    def tokens_to_texts(self, tokens):
+        return self.tokenizer.sequences_to_texts(tokens)
+
+    def __call__(self):
+        self.__drop_null()
+        self.__fit()
+        return self.__tokenize()

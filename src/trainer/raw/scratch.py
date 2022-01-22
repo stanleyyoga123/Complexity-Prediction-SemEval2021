@@ -11,17 +11,20 @@ from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLRO
 
 from src.constant import Path
 from src.utility import get_config, get_latest_version, json_to_text
-from src.embedder import Word2VecEmbedder
+from src.embedder import Word2VecEmbedder, FastTextEmbedder
 from src.loader import RawScratchLoader
 from src.regressor import RawRegressor
 from src.evaluator import Evaluator
 
 class Trainer:
-    def __init__(self):
+    def __init__(self, embedder, prefix):
         self.config = get_config("scratch")
-        self.prefix = "raw-w2v"
+        self.prefix = prefix
         self.loader = RawScratchLoader(self.config["loader"])
-        self.embedder = Word2VecEmbedder(self.config["word2vec"])
+        if embedder == "word2vec":
+            self.embedder = Word2VecEmbedder(self.config["word2vec"])
+        elif embedder == "fasttext":
+            self.embedder = FastTextEmbedder(self.config["fasttext"])
         self.__init_folder()
 
     def __init_folder(self):
@@ -137,7 +140,7 @@ class Trainer:
             f.write(msg)
 
 
-def main():
-    trainer = Trainer()
+def main(embedder, prefix):
+    trainer = Trainer(embedder, prefix)
     trainer.fit()
     trainer.save()
