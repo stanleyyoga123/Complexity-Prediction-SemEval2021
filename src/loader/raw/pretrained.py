@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-from transformers import BertTokenizer
+from transformers import BertTokenizer, XLNetTokenizer
 
 from src.constant import Path
 
@@ -9,7 +9,14 @@ from src.constant import Path
 class RawPretrainedLoader:
     def __init__(self, config):
         self.config = config
-        self.tokenizer = BertTokenizer.from_pretrained(config["model_name"])
+
+        if config["type"] == "bert":
+            self.tokenizer = BertTokenizer.from_pretrained(config["model_name"])
+        elif config["type"] == "xlnet":
+            self.tokenizer = XLNetTokenizer.from_pretrained(config["model_name"])
+        else:
+            raise ValueError("only support type (bert | xlnet)")
+            
         self.train = pd.concat(
             [pd.read_csv(Path.TRAIN_SINGLE), pd.read_csv(Path.TRAIN_MULTI)]
         ).reset_index(drop=True)

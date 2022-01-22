@@ -9,14 +9,19 @@ from tensorflow.keras.layers import (
     Bidirectional,
 )
 
-from src.embedder import BertEmbedder
+from src.embedder import BertEmbedder, XLNetEmbedder
 
 
 class PretrainedRegressor(Model):
     def __init__(self, config):
         super(PretrainedRegressor, self).__init__()
         self.config = config
-        self.embedding = BertEmbedder(config["embedding"])
+        
+        if config["type"] == "bert":
+            self.embedding = BertEmbedder(config["embedding"])
+        elif config["type"] == "xlnet":
+            self.embedding = XLNetEmbedder(config["embedding"])
+            
         self.recurrent_layers = {"lstm", "bilstm", "gru", "bigru"}
 
         if config["layer_type"].lower() == "lstm":
