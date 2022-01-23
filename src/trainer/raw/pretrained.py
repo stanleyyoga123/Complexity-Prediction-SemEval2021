@@ -15,11 +15,14 @@ from src.loader import RawPretrainedLoader
 from src.regressor import PretrainedRegressor
 from src.evaluator import Evaluator
 
+
 class Trainer:
     def __init__(self, prefix):
         self.config = get_config("pretrained")
         self.prefix = prefix
-        self.loader = RawPretrainedLoader({**self.config["master"], **self.config["loader"]})
+        self.loader = RawPretrainedLoader(
+            {**self.config["master"], **self.config["loader"]}
+        )
         self.__init_folder()
 
     def __init_folder(self):
@@ -32,7 +35,11 @@ class Trainer:
         self.data = self.loader()
 
         self.model = PretrainedRegressor(
-            {"embedding": self.config["master"], **self.config["regressor"]}
+            {
+                "embedding": self.config["master"],
+                **self.config["master"],
+                **self.config["regressor"],
+            }
         )
 
         # Callbacks
@@ -60,7 +67,7 @@ class Trainer:
             batch_size=self.config["trainer"]["batch_size"],
             epochs=self.config["trainer"]["epochs"],
             validation_data=(self.data["X_dev"], self.data["y_dev"]),
-            callbacks=callbacks
+            callbacks=callbacks,
         )
 
     def evaluate(self):

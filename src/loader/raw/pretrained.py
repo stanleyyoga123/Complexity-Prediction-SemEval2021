@@ -16,7 +16,7 @@ class RawPretrainedLoader:
             self.tokenizer = XLNetTokenizer.from_pretrained(config["model_name"])
         else:
             raise ValueError("only support type (bert | xlnet)")
-            
+
         self.train = pd.concat(
             [pd.read_csv(Path.TRAIN_SINGLE), pd.read_csv(Path.TRAIN_MULTI)]
         ).reset_index(drop=True)
@@ -37,32 +37,38 @@ class RawPretrainedLoader:
 
     def __tokenize(self):
         X_train, X_dev, X_test = {}, {}, {}
-        X_train["sentence"] = self.tokenizer(
-            self.train["sentence"], **self.config["tokenizer_sentence"]
+        X_train["sentence"] = dict(
+            self.tokenizer(
+                list(self.train["sentence"]), **self.config["tokenizer_sentence"]
+            )
         )
-        X_train["token"] = self.tokenizer(
-            self.train["token"], **self.config["tokenizer_token"]
-        )
-
-        X_dev["sentence"] = self.tokenizer(
-            self.dev["sentence"], **self.config["tokenizer_sentence"]
-        )
-        X_dev["token"] = self.tokenizer(
-            self.dev["token"], **self.config["tokenizer_token"]
+        X_train["token"] = dict(
+            self.tokenizer(list(self.train["token"]), **self.config["tokenizer_token"])
         )
 
-        X_test["sentence"] = self.tokenizer(
-            self.test["sentence"], **self.config["tokenizer_sentence"]
+        X_dev["sentence"] = dict(
+            self.tokenizer(
+                list(self.dev["sentence"]), **self.config["tokenizer_sentence"]
+            )
         )
-        X_test["token"] = self.tokenizer(
-            self.test["token"], **self.config["tokenizer_token"]
+        X_dev["token"] = dict(
+            self.tokenizer(list(self.dev["token"]), **self.config["tokenizer_token"])
+        )
+
+        X_test["sentence"] = dict(
+            self.tokenizer(
+                list(self.test["sentence"]), **self.config["tokenizer_sentence"]
+            )
+        )
+        X_test["token"] = dict(
+            self.tokenizer(list(self.test["token"]), **self.config["tokenizer_token"])
         )
 
         y_train = np.array(self.train["complexity"])
         y_dev = np.array(self.dev["complexity"])
         y_test = np.array(self.test["complexity"])
 
-        return {
+        res = {
             "X_train": X_train,
             "X_test": X_test,
             "X_dev": X_dev,
@@ -70,6 +76,8 @@ class RawPretrainedLoader:
             "y_test": y_test,
             "y_dev": y_dev,
         }
+
+        return res
 
     def __call__(self):
         self.__drop_null()

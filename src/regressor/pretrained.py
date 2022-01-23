@@ -17,9 +17,9 @@ class PretrainedRegressor(Model):
         super(PretrainedRegressor, self).__init__()
         self.config = config
         
-        if config["type"] == "bert":
+        if config["type"].lower() == "bert":
             self.embedding = BertEmbedder(config["embedding"])
-        elif config["type"] == "xlnet":
+        elif config["type"].lower() == "xlnet":
             self.embedding = XLNetEmbedder(config["embedding"])
             
         self.recurrent_layers = {"lstm", "bilstm", "gru", "bigru"}
@@ -50,7 +50,7 @@ class PretrainedRegressor(Model):
     def call(self, X, training=None):
         part_taken = (
             "last_hidden_state"
-            if self.config["layer-type"] in self.recurrent_layers
+            if self.config["layer_type"] in self.recurrent_layers
             else "pooler_output"
         )
 
