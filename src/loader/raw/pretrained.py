@@ -2,7 +2,6 @@ import pandas as pd
 import numpy as np
 
 from transformers import BertTokenizer, XLNetTokenizer
-
 from src.constant import Path
 
 
