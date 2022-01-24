@@ -1,8 +1,8 @@
 mode: "patch"
 
 master:
-  model_name: "xlnet-base-cased"
-  type: "xlnet"
+  model_name: "bert-base-uncased"
+  type: "bert"
 
 loader:
   tokenizer_sentence:
