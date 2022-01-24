@@ -130,7 +130,6 @@ dmypy.json
 
 data/
 models/
-resources/
 checkpoints/
 
 *.pkl

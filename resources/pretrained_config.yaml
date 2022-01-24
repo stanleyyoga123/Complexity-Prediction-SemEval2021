@@ -1,0 +1,32 @@
+mode: "patch"
+
+master:
+  model_name: "xlnet-base-cased"
+  type: "xlnet"
+
+loader:
+  tokenizer_sentence:
+    max_length: 512
+    padding: "max_length"
+    truncation: True
+    return_tensors: "tf"
+  tokenizer_token:
+    max_length: 16
+    padding: max_length
+    truncation: True
+    return_tensors: "tf"
+
+regressor:
+  layer_type: "bigru"
+  sentence_unit: 64
+  token_unit: 64
+  dropout_rate: 0.2
+
+trainer:
+  lr: 0.000001
+  batch_size: 1
+  epochs: 10
+  early_stopping_patience: 3
+  reduce_lr_factor: 0.2
+  reduce_lr_patience: 2
+  reduce_lr_min: 0.00000001
