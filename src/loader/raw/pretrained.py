@@ -36,6 +36,8 @@ class RawPretrainedLoader:
 
     def __tokenize(self):
         X_train, X_dev, X_test = {}, {}, {}
+        train, dev, test = {}, {}, {}
+
         X_train["sentence"] = dict(
             self.tokenizer(
                 list(self.train["sentence"]), **self.config["tokenizer_sentence"]
@@ -74,6 +76,9 @@ class RawPretrainedLoader:
             "y_train": y_train,
             "y_test": y_test,
             "y_dev": y_dev,
+            "train": self.train,
+            "dev": self.dev,
+            "test": self.test,
         }
 
         return res
