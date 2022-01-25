@@ -6,5 +6,5 @@ class BertEmbedder:
         self.config = config
         self.embedder = TFBertModel.from_pretrained(config["model_name"])
 
-    def __call__(self, x):
-        return self.embedder(x)
+    def get_layer(self):
+        return self.embedder

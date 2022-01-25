@@ -3,7 +3,6 @@ tf.random.set_seed(42)
 
 from tensorflow.keras import Model
 from tensorflow.keras.layers import (
-    Embedding,
     Dense,
     LSTM,
     GRU,
@@ -21,9 +20,9 @@ class PretrainedRegressor(Model):
         self.config = config
         
         if config["type"].lower() == "bert":
-            self.embedding = BertEmbedder(config["embedding"])
+            self.embedding = BertEmbedder(config["embedding"]).get_layer()
         elif config["type"].lower() == "xlnet":
-            self.embedding = XLNetEmbedder(config["embedding"])
+            self.embedding = XLNetEmbedder(config["embedding"]).get_layer()
             
         self.recurrent_layers = {"lstm", "bilstm", "gru", "bigru"}
 
