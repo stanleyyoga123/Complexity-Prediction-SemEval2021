@@ -1,3 +1,6 @@
+import tensorflow as tf
+tf.random.set_seed(42)
+
 from tensorflow.keras import Model
 from tensorflow.keras.layers import (
     Embedding,

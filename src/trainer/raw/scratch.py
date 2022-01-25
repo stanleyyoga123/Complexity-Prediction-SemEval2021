@@ -5,6 +5,9 @@ import shutil
 import pandas as pd
 import numpy as np
 
+import tensorflow as tf
+tf.random.set_seed(42)
+
 from tensorflow.keras.losses import MeanSquaredError
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau
