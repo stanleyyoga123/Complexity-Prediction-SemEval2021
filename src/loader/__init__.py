@@ -1,2 +1,2 @@
-from .raw.scratch import RawScratchLoader
-from .raw.pretrained import RawPretrainedLoader
+from .scratch import RawScratchLoader
+from .pretrained import RawPretrainedLoader

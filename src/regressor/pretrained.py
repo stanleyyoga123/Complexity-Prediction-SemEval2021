@@ -45,12 +45,12 @@ class PretrainedRegressor(Model):
             raise ValueError("only support (lstm | bilstm | gru | bigru) layer type")
 
         if config["enhance_feat"]:
-            self.extractor = Dense(config["dense_unit"])
+            self.extractor = Dense(config["dense_unit"], activation="relu", name="extractor")
 
         self.concatenate = Concatenate()
         self.dropout = Dropout(config["dropout_rate"])
 
-        self.out = Dense(1, activation="relu")
+        self.out = Dense(1, activation="relu", name="regressor")
 
     def call(self, X, training=None):
         part_taken = (

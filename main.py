@@ -13,10 +13,10 @@ def parse_arguments():
 if __name__ == "__main__":
     args = parse_arguments()
     if args.type == "pretrained":
-        from src.trainer.raw.pretrained import main
+        from src.trainer.pretrained import main
 
         main(args.prefix)
     else:
-        from src.trainer.raw.scratch import main
+        from src.trainer.scratch import main
 
         main(args.type, args.prefix)

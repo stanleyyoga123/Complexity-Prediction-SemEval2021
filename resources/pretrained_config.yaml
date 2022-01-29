@@ -3,7 +3,7 @@ mode: "patch"
 master:
   model_name: "bert-base-uncased"
   type: "bert"
-  enhance_feat: False
+  enhance_feat: True
 
 loader:
   tokenizer_sentence:
