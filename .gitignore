@@ -131,6 +131,7 @@ dmypy.json
 data/
 models/
 checkpoints/
+resources/
 
 test.py
 *.pkl

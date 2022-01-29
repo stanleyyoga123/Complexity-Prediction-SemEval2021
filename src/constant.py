@@ -18,3 +18,8 @@ class Path:
 
     CONFIG_SCRATCH = os.path.join(RESOURCES, "scratch_config.yaml")
     CONFIG_PRETRAINED = os.path.join(RESOURCES, "pretrained_config.yaml")
+
+    GOOGLE_FREQ = os.path.join(RESOURCES, "google-freq.txt")
+    WIKIPEDIA_FREQ = os.path.join(RESOURCES, "wikipedia-freq.txt")
+    SUBTLEX_US_FREQ = os.path.join(RESOURCES, "subtlex-us.csv")
+    SUBTLEX_UK_FREQ = os.path.join(RESOURCES, "subtlex-uk.csv")

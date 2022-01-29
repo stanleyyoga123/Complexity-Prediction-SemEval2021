@@ -3,6 +3,7 @@ mode: "patch"
 master:
   model_name: "bert-base-uncased"
   type: "bert"
+  enhance_feat: False
 
 loader:
   tokenizer_sentence:
@@ -15,12 +16,16 @@ loader:
     padding: max_length
     truncation: True
     return_tensors: "tf"
+  generator:
+    feature_names: "count-syllabels|count-morphemes|count-length"
+    list_frequency: "google|wikipedia|subtlex-us|subtlex-uk"
 
 regressor:
   layer_type: "bigru"
   sentence_unit: 64
   token_unit: 64
   dropout_rate: 0.2
+  dense_unit: 32
 
 trainer:
   lr: 0.000001

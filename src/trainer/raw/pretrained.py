@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 
 import tensorflow as tf
+
 tf.random.set_seed(42)
 
 from tensorflow.keras.losses import MeanSquaredError

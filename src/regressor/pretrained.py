@@ -44,10 +44,13 @@ class PretrainedRegressor(Model):
         else:
             raise ValueError("only support (lstm | bilstm | gru | bigru) layer type")
 
+        if config["enhance_feat"]:
+            self.extractor = Dense(config["dense_unit"])
+
         self.concatenate = Concatenate()
         self.dropout = Dropout(config["dropout_rate"])
 
-        self.dense = Dense(1, activation="relu")
+        self.out = Dense(1, activation="relu")
 
     def call(self, X, training=None):
         part_taken = (
@@ -64,6 +67,13 @@ class PretrainedRegressor(Model):
         X_token = self.token(X_token)
         X_token = self.dropout(X_token, training=training)
 
-        X_concatenate = self.concatenate([X_sentence, X_token])
-        res = self.dense(X_concatenate)
+        concated = [X_sentence, X_token]
+
+        if self.config["enhance_feat"]:
+            X_dense = self.extractor(X["features"])
+            X_dense = self.dropout(X_dense)
+            concated.append(X_dense)
+
+        X_concatenate = self.concatenate(concated)
+        res = self.out(X_concatenate)
         return res

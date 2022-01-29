@@ -3,11 +3,14 @@ import numpy as np
 
 from transformers import BertTokenizer, XLNetTokenizer
 from src.constant import Path
+from src.features import Generator
 
 
 class RawPretrainedLoader:
     def __init__(self, config):
         self.config = config
+        if config["enhance_feat"]:
+            self.generator = Generator(config["generator"])
 
         if config["type"] == "bert":
             self.tokenizer = BertTokenizer.from_pretrained(config["model_name"])
@@ -16,15 +19,18 @@ class RawPretrainedLoader:
         else:
             raise ValueError("only support type (bert | xlnet)")
 
-        self.train = pd.concat(
-            [pd.read_csv(Path.TRAIN_SINGLE), pd.read_csv(Path.TRAIN_MULTI)]
-        ).reset_index(drop=True)
-        self.dev = pd.concat(
-            [pd.read_csv(Path.DEV_SINGLE), pd.read_csv(Path.DEV_MULTI)]
-        ).reset_index(drop=True)
-        self.test = pd.concat(
-            [pd.read_csv(Path.TEST_SINGLE), pd.read_csv(Path.TEST_MULTI)]
-        ).reset_index(drop=True)
+        self.train = (
+            pd.concat([pd.read_csv(Path.TRAIN_SINGLE), pd.read_csv(Path.TRAIN_MULTI)])
+            .reset_index(drop=True)
+        )
+        self.dev = (
+            pd.concat([pd.read_csv(Path.DEV_SINGLE), pd.read_csv(Path.DEV_MULTI)])
+            .reset_index(drop=True)
+        )
+        self.test = (
+            pd.concat([pd.read_csv(Path.TEST_SINGLE), pd.read_csv(Path.TEST_MULTI)])
+            .reset_index(drop=True)
+        )
 
     def __drop_null(self):
         self.train = self.train.drop(self.train[self.train["token"].isnull()].index)
@@ -36,7 +42,6 @@ class RawPretrainedLoader:
 
     def __tokenize(self):
         X_train, X_dev, X_test = {}, {}, {}
-        train, dev, test = {}, {}, {}
 
         X_train["sentence"] = dict(
             self.tokenizer(
@@ -65,6 +70,11 @@ class RawPretrainedLoader:
             self.tokenizer(list(self.test["token"]), **self.config["tokenizer_token"])
         )
 
+        if self.config["enhance_feat"]:
+            X_train["features"] = self.generator(self.train["token"])
+            X_dev["features"] = self.generator(self.dev["token"])
+            X_test["features"] = self.generator(self.test["token"])
+
         y_train = np.array(self.train["complexity"])
         y_dev = np.array(self.dev["complexity"])
         y_test = np.array(self.test["complexity"])
@@ -80,6 +90,9 @@ class RawPretrainedLoader:
             "dev": self.dev,
             "test": self.test,
         }
+
+        import pickle
+        pickle.dump(res, open("file.pkl", "wb"))
 
         return res
 
