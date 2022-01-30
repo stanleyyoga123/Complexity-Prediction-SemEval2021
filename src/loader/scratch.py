@@ -8,11 +8,15 @@ from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 from src.constant import Path
+from src.features import Generator
 
 
 class RawScratchLoader:
     def __init__(self, config):
         self.config = config
+        if config["enhance_feat"]:
+            self.generator = Generator(config["generator"])
+
         self.tokenizer = Tokenizer(**config["tokenizer"])
         self.pad_params = {"padding": "pre", "truncating": "post", "value": 0}
 
@@ -69,6 +73,11 @@ class RawScratchLoader:
         X_test["token"] = self.__convert_pad(
             self.test["token"], self.config["token_maxlen"]
         )
+
+        if self.config["enhance_feat"]:
+            X_train["features"] = self.generator(self.train["token"])
+            X_dev["features"] = self.generator(self.dev["token"])
+            X_test["features"] = self.generator(self.test["token"])
 
         y_train = np.array(self.train["complexity"])
         y_dev = np.array(self.dev["complexity"])

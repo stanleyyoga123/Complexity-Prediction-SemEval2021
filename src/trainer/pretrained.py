@@ -21,8 +21,8 @@ from src.evaluator import Evaluator
 
 
 class Trainer:
-    def __init__(self, prefix):
-        self.config = get_config("pretrained")
+    def __init__(self, config_path, prefix):
+        self.config = get_config(config_path)
         self.prefix = prefix
         self.loader = RawPretrainedLoader(
             {**self.config["master"], **self.config["loader"]}
@@ -139,7 +139,7 @@ class Trainer:
             f.write(msg)
 
 
-def main(prefix):
-    trainer = Trainer(prefix)
+def main(config, prefix):
+    trainer = Trainer(config, prefix)
     trainer.fit()
     trainer.save()

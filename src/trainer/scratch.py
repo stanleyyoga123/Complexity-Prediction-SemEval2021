@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 
 import tensorflow as tf
+
 tf.random.set_seed(42)
 
 from tensorflow.keras.losses import MeanSquaredError
@@ -19,11 +20,14 @@ from src.loader import RawScratchLoader
 from src.regressor import RawRegressor
 from src.evaluator import Evaluator
 
+
 class Trainer:
-    def __init__(self, embedder, prefix):
-        self.config = get_config("scratch")
+    def __init__(self, config_path, embedder, prefix):
+        self.config = get_config(config_path)
         self.prefix = prefix
-        self.loader = RawScratchLoader(self.config["loader"])
+        self.loader = RawScratchLoader(
+            {**self.config["master"], **self.config["loader"]}
+        )
         if embedder == "word2vec":
             self.embedder = Word2VecEmbedder(self.config["word2vec"])
         elif embedder == "fasttext":
@@ -47,7 +51,11 @@ class Trainer:
         embedding_config["trainable"] = self.config["regressor"]["trainable_embedding"]
 
         self.model = RawRegressor(
-            {"embedding": embedding_config, **self.config["regressor"]}
+            {
+                "embedding": embedding_config,
+                **self.config["regressor"],
+                **self.config["master"],
+            }
         )
 
         # Callbacks
@@ -75,7 +83,7 @@ class Trainer:
             batch_size=self.config["trainer"]["batch_size"],
             epochs=self.config["trainer"]["epochs"],
             validation_data=(self.data["X_dev"], self.data["y_dev"]),
-            callbacks=callbacks
+            callbacks=callbacks,
         )
 
     def evaluate(self):
@@ -143,7 +151,7 @@ class Trainer:
             f.write(msg)
 
 
-def main(embedder, prefix):
-    trainer = Trainer(embedder, prefix)
+def main(config, embedder, prefix):
+    trainer = Trainer(config, embedder, prefix)
     trainer.fit()
     trainer.save()

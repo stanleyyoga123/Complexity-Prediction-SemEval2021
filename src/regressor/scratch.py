@@ -16,7 +16,7 @@ from tensorflow.keras.layers import (
 class RawRegressor(Model):
     def __init__(self, config):
         super(RawRegressor, self).__init__()
-
+        self.config = config
         self.embedding = Embedding(**config["embedding"])
 
         if config["layer_type"].lower() == "lstm":
@@ -34,10 +34,13 @@ class RawRegressor(Model):
         else:
             raise ValueError("only support (lstm | bilstm | gru | bigru) layer type")
         
+        if config["enhance_feat"]:
+            self.extractor = Dense(config["dense_unit"], activation="relu", name="extractor")
+
         self.concatenate = Concatenate()
         self.dropout = Dropout(config["dropout_rate"])
 
-        self.dense = Dense(1, activation="relu")
+        self.dense = Dense(1, activation="relu", name="regressor")
 
     def call(self, X, training=None):
         X_sentence = self.embedding(X["sentence"])
@@ -48,6 +51,13 @@ class RawRegressor(Model):
         X_token = self.token(X_token)
         X_token = self.dropout(X_token, training=training)
 
-        X_concatenate = self.concatenate([X_sentence, X_token])
+        concated = [X_sentence, X_token]
+
+        if self.config["enhance_feat"]:
+            X_dense = self.extractor(X["features"])
+            X_dense = self.dropout(X_dense)
+            concated.append(X_dense)
+
+        X_concatenate = self.concatenate(concated)
         res = self.dense(X_concatenate)
         return res
