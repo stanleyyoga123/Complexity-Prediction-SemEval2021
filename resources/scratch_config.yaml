@@ -1,5 +1,8 @@
 mode: "patch"
 
+master:
+  enhance_feat: True
+
 loader:
   tokenizer:
     lower: 1
@@ -7,6 +10,9 @@ loader:
     char_level: 0
     oov_token: "<OOV>"
     num_words: 10000
+  generator:
+    feature_names: "count-syllabels|count-morphemes|count-length"
+    list_frequency: "google|wikipedia|subtlex-us|subtlex-uk"
   sentence_maxlen: 256
   token_maxlen: 2
 
@@ -30,6 +36,7 @@ regressor:
   sentence_unit: 64
   token_unit: 64
   dropout_rate: 0.5
+  dense_unit: 32
 
 trainer:
   lr: 0.001
