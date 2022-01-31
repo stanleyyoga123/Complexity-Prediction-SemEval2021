@@ -25,13 +25,23 @@ regressor:
   sentence_unit: 64
   token_unit: 64
   dropout_rate: 0.2
-  dense_unit: 32
+  dense_unit: 4
 
 trainer:
-  lr: 0.000001
-  batch_size: 1
+  lr: 0.000005
+  batch_size: 2
   epochs: 10
   early_stopping_patience: 3
   reduce_lr_factor: 0.2
   reduce_lr_patience: 2
   reduce_lr_min: 0.00000001
+  
+  train_separately: True
+  separate_train:
+    lr: 0.0001
+    batch_size: 4
+    epochs: 5
+    early_stopping_patience: 3
+    reduce_lr_factor: 0.2
+    reduce_lr_patience: 2
+    reduce_lr_min: 0.00000001

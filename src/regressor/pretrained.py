@@ -1,4 +1,5 @@
 import tensorflow as tf
+
 tf.random.set_seed(42)
 
 from tensorflow.keras import Model
@@ -18,12 +19,12 @@ class PretrainedRegressor(Model):
     def __init__(self, config):
         super(PretrainedRegressor, self).__init__()
         self.config = config
-        
+
         if config["type"].lower() == "bert":
             self.embedding = BertEmbedder(config["embedding"]).get_layer()
         elif config["type"].lower() == "xlnet":
             self.embedding = XLNetEmbedder(config["embedding"]).get_layer()
-            
+
         self.recurrent_layers = {"lstm", "bilstm", "gru", "bigru"}
 
         if config["layer_type"].lower() == "lstm":
@@ -45,10 +46,14 @@ class PretrainedRegressor(Model):
             raise ValueError("only support (lstm | bilstm | gru | bigru) layer type")
 
         if config["enhance_feat"]:
-            self.extractor = Dense(config["dense_unit"], activation="relu", name="extractor")
+            self.extractor = Dense(
+                config["dense_unit"], activation="relu", name="extractor"
+            )
+            self.dropout_extractor = Dropout(config["dropout_rate"])
 
         self.concatenate = Concatenate()
-        self.dropout = Dropout(config["dropout_rate"])
+        self.dropout_token = Dropout(config["dropout_rate"])
+        self.dropout_sentence = Dropout(config["dropout_rate"])
 
         self.out = Dense(1, activation="relu", name="regressor")
 
@@ -61,17 +66,17 @@ class PretrainedRegressor(Model):
 
         X_sentence = self.embedding(X["sentence"])[part_taken]
         X_sentence = self.sentence(X_sentence)
-        X_sentence = self.dropout(X_sentence)
+        X_sentence = self.dropout_sentence(X_sentence)
 
         X_token = self.embedding(X["token"])[part_taken]
         X_token = self.token(X_token)
-        X_token = self.dropout(X_token, training=training)
+        X_token = self.dropout_token(X_token, training=training)
 
         concated = [X_sentence, X_token]
 
         if self.config["enhance_feat"]:
             X_dense = self.extractor(X["features"])
-            X_dense = self.dropout(X_dense)
+            X_dense = self.dropout_extractor(X_dense)
             concated.append(X_dense)
 
         X_concatenate = self.concatenate(concated)

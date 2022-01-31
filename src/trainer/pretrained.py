@@ -46,7 +46,44 @@ class Trainer:
             }
         )
 
-        # Callbacks
+        if self.config["trainer"]["train_separately"]:
+            self.model.embedding.trainable = False
+            callbacks = [
+                EarlyStopping(
+                    patience=self.config["trainer"]["separate_train"][
+                        "early_stopping_patience"
+                    ]
+                ),
+                ReduceLROnPlateau(
+                    factor=self.config["trainer"]["separate_train"]["reduce_lr_factor"],
+                    patience=self.config["trainer"]["separate_train"][
+                        "reduce_lr_patience"
+                    ],
+                    min_lr=self.config["trainer"]["separate_train"]["reduce_lr_min"],
+                ),
+                ModelCheckpoint(
+                    filepath=os.path.join(self.folder_path, "model-best.h5"),
+                    save_best_only=True,
+                    save_weights_only=True,
+                ),
+            ]
+
+            self.model.compile(
+                loss=MeanSquaredError(),
+                optimizer=Adam(
+                    learning_rate=self.config["trainer"]["separate_train"]["lr"]
+                ),
+            )
+            self.model.fit(
+                self.data["X_train"],
+                self.data["y_train"],
+                batch_size=self.config["trainer"]["separate_train"]["batch_size"],
+                epochs=self.config["trainer"]["separate_train"]["epochs"],
+                validation_data=(self.data["X_dev"], self.data["y_dev"]),
+                callbacks=callbacks,
+            )
+            self.model.embedding.trainable = True
+
         callbacks = [
             EarlyStopping(patience=self.config["trainer"]["early_stopping_patience"]),
             ReduceLROnPlateau(
@@ -60,7 +97,6 @@ class Trainer:
                 save_weights_only=True,
             ),
         ]
-
         self.model.compile(
             loss=MeanSquaredError(),
             optimizer=Adam(learning_rate=self.config["trainer"]["lr"]),
