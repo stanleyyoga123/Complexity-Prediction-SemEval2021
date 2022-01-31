@@ -132,6 +132,7 @@ data/
 models/
 checkpoints/
 resources/
+eval/
 
 test.py
 *.pkl

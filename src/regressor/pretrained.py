@@ -12,7 +12,7 @@ from tensorflow.keras.layers import (
     Bidirectional,
 )
 
-from src.embedder import BertEmbedder, XLNetEmbedder
+from src.embedder import BertEmbedder, XLNetEmbedder, RobertaEmbedder
 
 
 class PretrainedRegressor(Model):
@@ -24,6 +24,8 @@ class PretrainedRegressor(Model):
             self.embedding = BertEmbedder(config["embedding"]).get_layer()
         elif config["type"].lower() == "xlnet":
             self.embedding = XLNetEmbedder(config["embedding"]).get_layer()
+        elif config["type"].lower() == "roberta":
+            self.embedding = RobertaEmbedder(config["embedding"]).get_layer()
 
         self.recurrent_layers = {"lstm", "bilstm", "gru", "bigru"}
 

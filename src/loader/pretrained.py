@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-from transformers import BertTokenizer, XLNetTokenizer
+from transformers import BertTokenizer, XLNetTokenizer, RobertaTokenizer
 from src.constant import Path
 from src.features import Generator
 
@@ -16,6 +16,8 @@ class RawPretrainedLoader:
             self.tokenizer = BertTokenizer.from_pretrained(config["model_name"])
         elif config["type"] == "xlnet":
             self.tokenizer = XLNetTokenizer.from_pretrained(config["model_name"])
+        elif config["type"] == "roberta":
+            self.tokenizer = RobertaTokenizer.from_pretrained(config["model_name"])
         else:
             raise ValueError("only support type (bert | xlnet)")
 
