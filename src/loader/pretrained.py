@@ -21,17 +21,14 @@ class RawPretrainedLoader:
 
         self.train = (
             pd.concat([pd.read_csv(Path.TRAIN_SINGLE), pd.read_csv(Path.TRAIN_MULTI)])
-            .sample(5)
             .reset_index(drop=True)
         )
         self.dev = (
             pd.concat([pd.read_csv(Path.DEV_SINGLE), pd.read_csv(Path.DEV_MULTI)])
-            .sample(5)
             .reset_index(drop=True)
         )
         self.test = (
             pd.concat([pd.read_csv(Path.TEST_SINGLE), pd.read_csv(Path.TEST_MULTI)])
-            .sample(5)
             .reset_index(drop=True)
         )
 
