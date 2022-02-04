@@ -19,7 +19,7 @@ from src.embedder import Word2VecEmbedder, FastTextEmbedder
 from src.loader import RawScratchLoader
 from src.regressor import RawRegressor
 from src.evaluator import Evaluator
-from src.metrics import pearson
+# from src.metrics import pearson
 
 
 class Trainer:
