@@ -18,6 +18,7 @@ from src.utility import get_config, get_latest_version, json_to_text
 from src.loader import RawPretrainedLoader
 from src.regressor import PretrainedRegressor
 from src.evaluator import Evaluator
+from src.metrics import pearson
 
 
 class Trainer:
@@ -73,6 +74,7 @@ class Trainer:
                 optimizer=Adam(
                     learning_rate=self.config["trainer"]["separate_train"]["lr"]
                 ),
+                metrics=[pearson],
             )
             self.model.fit(
                 self.data["X_train"],
@@ -107,10 +109,14 @@ class Trainer:
             batch_size=self.config["trainer"]["batch_size"],
             epochs=self.config["trainer"]["epochs"],
             validation_data=(self.data["X_dev"], self.data["y_dev"]),
+            metrics=[pearson],
             callbacks=callbacks,
         )
 
     def evaluate(self):
+        # Load best weights
+        self.model.load_weights(os.path.join(self.folder_path, "model-best.h5"))
+        
         train_pred = self.model.predict(
             self.data["X_train"],
             batch_size=self.config["trainer"]["batch_size"],

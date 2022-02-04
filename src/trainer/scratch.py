@@ -1,6 +1,6 @@
 from datetime import datetime
 import os
-import shutil
+import yaml
 
 import pandas as pd
 import numpy as np
@@ -19,6 +19,7 @@ from src.embedder import Word2VecEmbedder, FastTextEmbedder
 from src.loader import RawScratchLoader
 from src.regressor import RawRegressor
 from src.evaluator import Evaluator
+from src.metrics import pearson
 
 
 class Trainer:
@@ -128,7 +129,8 @@ class Trainer:
         return df_train, df_dev, df_test
 
     def save(self):
-        shutil.copy2(Path.CONFIG_SCRATCH, self.folder_path)
+        with open(os.path.join(self.folder_path, "config.yaml"), "w+") as f:
+            f.write(yaml.dump(self.config))
 
         with open(os.path.join(self.folder_path, "notes.txt"), "w+") as f:
             msg = f"Experiment datetime: {datetime.now()}"
