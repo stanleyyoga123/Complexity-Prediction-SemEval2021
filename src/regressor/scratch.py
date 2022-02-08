@@ -13,9 +13,9 @@ from tensorflow.keras.layers import (
 )
 
 
-class RawRegressor(Model):
+class ScratchRegressor(Model):
     def __init__(self, config):
-        super(RawRegressor, self).__init__()
+        super(ScratchRegressor, self).__init__()
         self.config = config
         self.embedding = Embedding(**config["embedding"])
 

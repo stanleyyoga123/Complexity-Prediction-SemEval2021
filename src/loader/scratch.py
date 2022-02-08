@@ -11,7 +11,7 @@ from src.constant import Path
 from src.features import Generator
 
 
-class RawScratchLoader:
+class ScratchLoader:
     def __init__(self, config):
         self.config = config
         if config["enhance_feat"]:

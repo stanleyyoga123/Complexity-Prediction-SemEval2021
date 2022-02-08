@@ -1,2 +1,2 @@
-from .scratch import RawRegressor
+from .scratch import ScratchRegressor
 from .pretrained import PretrainedRegressor

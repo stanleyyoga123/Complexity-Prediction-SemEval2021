@@ -16,8 +16,8 @@ from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLRO
 from src.constant import Path
 from src.utility import get_config, get_latest_version, json_to_text
 from src.embedder import Word2VecEmbedder, FastTextEmbedder
-from src.loader import RawScratchLoader
-from src.regressor import RawRegressor
+from src.loader import ScratchLoader
+from src.regressor import ScratchRegressor
 from src.evaluator import Evaluator
 # from src.metrics import pearson
 
@@ -26,7 +26,7 @@ class Trainer:
     def __init__(self, config_path, embedder, prefix):
         self.config = get_config(config_path)
         self.prefix = prefix
-        self.loader = RawScratchLoader(
+        self.loader = ScratchLoader(
             {**self.config["master"], **self.config["loader"]}
         )
         if embedder == "word2vec":
@@ -51,7 +51,7 @@ class Trainer:
         embedding_config = self.embedder.get_embedding_config(self.loader.tokenizer)
         embedding_config["trainable"] = self.config["regressor"]["trainable_embedding"]
 
-        self.model = RawRegressor(
+        self.model = ScratchRegressor(
             {
                 "embedding": embedding_config,
                 **self.config["regressor"],
@@ -108,23 +108,29 @@ class Trainer:
             {
                 "sentence": self.data["train"]["sentence"],
                 "token": self.data["train"]["token"],
-                "complexity": np.array(train_pred).reshape(-1),
+                "truth_complexity": self.data["y_train"],
+                "pred_complexity": np.array(train_pred).reshape(-1),
             }
         )
         df_dev = pd.DataFrame(
             {
                 "sentence": self.data["dev"]["sentence"],
                 "token": self.data["dev"]["token"],
-                "complexity": np.array(dev_pred).reshape(-1),
+                "truth_complexity": self.data["y_dev"],
+                "pred_complexity": np.array(dev_pred).reshape(-1),
             }
         )
         df_test = pd.DataFrame(
             {
                 "sentence": self.data["test"]["sentence"],
                 "token": self.data["test"]["token"],
-                "complexity": np.array(test_pred).reshape(-1),
+                "truth_complexity": self.data["y_test"],
+                "pred_complexity": np.array(test_pred).reshape(-1),
             }
         )
+        df_train["group"] = df_train["token"].apply(lambda x: len(x.split()))
+        df_dev["group"] = df_dev["token"].apply(lambda x: len(x.split()))
+        df_test["group"] = df_test["token"].apply(lambda x: len(x.split()))
 
         return df_train, df_dev, df_test
 
@@ -142,15 +148,50 @@ class Trainer:
         df_test.to_csv(os.path.join(self.folder_path, "pred_test.csv"), index=False)
 
         # Evaluate
-        train_eval = Evaluator.eval(self.data["y_train"], df_train["complexity"])
-        dev_eval = Evaluator.eval(self.data["y_dev"], df_dev["complexity"])
-        test_eval = Evaluator.eval(self.data["y_test"], df_test["complexity"])
+        single_df = {
+            "train": df_train[df_train["group"] == 1],
+            "dev": df_dev[df_dev["group"] == 1],
+            "test": df_test[df_test["group"] == 1],
+        }
+        multi_df = {
+            "train": df_train[df_train["group"] != 1],
+            "dev": df_dev[df_dev["group"] != 1],
+            "test": df_test[df_test["group"] != 1],
+        }
+
+        train_eval_single = Evaluator.eval(
+            single_df["train"]["truth_complexity"],
+            single_df["train"]["pred_complexity"],
+        )
+        dev_eval_single = Evaluator.eval(
+            single_df["dev"]["truth_complexity"], single_df["dev"]["pred_complexity"]
+        )
+        test_eval_single = Evaluator.eval(
+            single_df["test"]["truth_complexity"], single_df["test"]["pred_complexity"]
+        )
+
+        train_eval_multi = Evaluator.eval(
+            multi_df["train"]["truth_complexity"], multi_df["train"]["pred_complexity"]
+        )
+        dev_eval_multi = Evaluator.eval(
+            multi_df["dev"]["truth_complexity"], multi_df["dev"]["pred_complexity"]
+        )
+        test_eval_multi = Evaluator.eval(
+            multi_df["test"]["truth_complexity"], multi_df["test"]["pred_complexity"]
+        )
 
         with open(os.path.join(self.folder_path, "evaluation.txt"), "w+") as f:
-            msg = f"Train\n{json_to_text(train_eval)}\n\n"
-            msg += f"Dev\n{json_to_text(dev_eval)}\n\n"
-            msg += f"Test\n{json_to_text(test_eval)}"
+            msg = "Single\n"
+            msg += f"Train\n{json_to_text(train_eval_single)}\n\n"
+            msg += f"Dev\n{json_to_text(dev_eval_single)}\n\n"
+            msg += f"Test\n{json_to_text(test_eval_single)}\n\n"
+
+            msg += "Multi\n"
+            msg += f"Train\n{json_to_text(train_eval_multi)}\n\n"
+            msg += f"Dev\n{json_to_text(dev_eval_multi)}\n\n"
+            msg += f"Test\n{json_to_text(test_eval_multi)}"
             f.write(msg)
+
 
 
 def main(config, embedder, prefix):
