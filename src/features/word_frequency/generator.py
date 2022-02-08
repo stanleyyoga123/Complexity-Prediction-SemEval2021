@@ -18,8 +18,8 @@ class FrequencyGenerator:
         ret = {freq_name: [] for freq_name in self.list_frequency}
         for words in texts:
             words = words.split()
+            val = {freq_name: 0 for freq_name in self.list_frequency}
             for word in words:
-                val = {freq_name: 0 for freq_name in self.list_frequency}
                 for freq_name in self.list_frequency:
                     val[freq_name] += (
                         self.dictionary[freq_name][word]

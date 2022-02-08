@@ -7,11 +7,15 @@ class Generator:
     def __init__(self, config):
         feature_names = config["feature_names"].split("|")
         list_frequency = config["list_frequency"].split("|")
-        self.feature_generator = FeatureGenerator(feature_names)
-        self.frequency_generator = FrequencyGenerator(list_frequency)
+        self.feature_generator = (
+            FeatureGenerator(feature_names) if config["feature_names"] else None
+        )
+        self.frequency_generator = (
+            FrequencyGenerator(list_frequency) if config["list_frequency"] else None
+        )
 
     def __call__(self, texts):
-        features = self.feature_generator(texts)
-        frequencies = self.frequency_generator(texts)
+        features = self.feature_generator(texts) if self.feature_generator else {}
+        frequencies = self.frequency_generator(texts) if self.frequency_generator else {}
         new_feats = np.array(list({**features, **frequencies}.values())).T
         return new_feats

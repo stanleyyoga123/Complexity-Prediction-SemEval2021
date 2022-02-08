@@ -15,8 +15,8 @@ class FeatureGenerator:
         ret = {feat_name: [] for feat_name in self.feature_names}
         for words in texts:
             words = words.split()
+            val = {feat_name: 0 for feat_name in self.feature_names}
             for word in words:
-                val = {feat_name: 0 for feat_name in self.feature_names}
                 for feat_name in self.feature_names:
                     val[feat_name] += self.dictionary[feat_name](word)
             for feat_name in self.feature_names:
