@@ -14,6 +14,9 @@ class Loader:
             "wikipedia": Loader.wikipedia_freq,
             "subtlex-us": Loader.subtlex_us_freq,
             "subtlex-uk": Loader.subtlex_uk_freq,
+            "concreteness": Loader.concreteness,
+            "age-of-acqusition": Loader.age_of_acquisition,
+            "complexity-score": Loader.complexity_score,
         }
 
     @staticmethod
@@ -68,3 +71,21 @@ class Loader:
         for key, i in zip(keys, range(1, len(df.columns))):
             ret[key] = {word: freq for word, freq in zip(words, df.iloc[:, i])}
         return ret
+
+    @staticmethod
+    def concreteness():
+        df = pd.read_csv(Path.CONCRETENESS, sep="\t")
+        ret = {word: val for word, val in zip(df.iloc[:, 0], df.iloc[:, 2])}
+        return {"concreteness": ret}
+
+    @staticmethod
+    def age_of_acquisition():
+        df = pd.read_excel(Path.AGE_OF_ACQUISITION, usecols=["Word", "Rating.Mean"])
+        ret = {word: val for word, val in zip(df.iloc[:, 0], df.iloc[:, 1])}
+        return {"age-of-acquisition": ret}
+
+    @staticmethod
+    def complexity_score():
+        df = pd.read_csv(Path.COMPLEXITY_SCORE, sep="\t", header=None)
+        ret = {word: val for word, val in zip(df.iloc[:, 0], df.iloc[:, 1])}
+        return {"complexity-score": ret}

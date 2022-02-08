@@ -23,3 +23,6 @@ class Path:
     WIKIPEDIA_FREQ = os.path.join(RESOURCES, "wikipedia-freq.txt")
     SUBTLEX_US_FREQ = os.path.join(RESOURCES, "subtlex-us.csv")
     SUBTLEX_UK_FREQ = os.path.join(RESOURCES, "subtlex-uk.csv")
+    CONCRETENESS = os.path.join(RESOURCES, "concreteness.txt")
+    AGE_OF_ACQUISITION = os.path.join(RESOURCES, "aoa.xlsx")
+    COMPLEXITY_SCORE = os.path.join(RESOURCES, "lexicon.tsv")

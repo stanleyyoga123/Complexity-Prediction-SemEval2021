@@ -14,8 +14,8 @@ class Generator:
             FrequencyGenerator(list_frequency) if config["list_frequency"] else None
         )
 
-    def __call__(self, texts):
-        features = self.feature_generator(texts) if self.feature_generator else {}
+    def __call__(self, sentences, texts):
+        features = self.feature_generator(sentences, texts) if self.feature_generator else {}
         frequencies = self.frequency_generator(texts) if self.frequency_generator else {}
         new_feats = np.array(list({**features, **frequencies}.values())).T
         return new_feats

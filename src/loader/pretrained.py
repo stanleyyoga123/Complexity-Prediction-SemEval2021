@@ -73,9 +73,9 @@ class PretrainedLoader:
         )
 
         if self.config["enhance_feat"]:
-            X_train["features"] = self.generator(train["token"])
-            X_dev["features"] = self.generator(dev["token"])
-            X_test["features"] = self.generator(test["token"])
+            X_train["features"] = self.generator(train["sentence"], train["token"])
+            X_dev["features"] = self.generator(dev["sentence"], dev["token"])
+            X_test["features"] = self.generator(test["sentence"], test["token"])
 
         y_train = np.array(train["complexity"])
         y_dev = np.array(dev["complexity"])
