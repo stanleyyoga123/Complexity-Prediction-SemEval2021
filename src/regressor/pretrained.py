@@ -10,6 +10,7 @@ from tensorflow.keras.layers import (
     Dropout,
     Concatenate,
     Bidirectional,
+    LeakyReLU,
 )
 
 from src.embedder import BertEmbedder, XLNetEmbedder, RobertaEmbedder
@@ -30,33 +31,30 @@ class PretrainedRegressor(Model):
         self.recurrent_layers = {"lstm", "bilstm", "gru", "bigru"}
 
         if config["layer_type"].lower() == "lstm":
-            self.sentence = LSTM(config["sentence_unit"])
-            self.token = LSTM(config["token_unit"])
+            self.text = LSTM(config["text_unit"])
         elif config["layer_type"].lower() == "bilstm":
-            self.sentence = Bidirectional(LSTM(config["sentence_unit"]))
-            self.token = Bidirectional(LSTM(config["token_unit"]))
+            self.text = Bidirectional(LSTM(config["text_unit"]))
         elif config["layer_type"].lower() == "gru":
-            self.sentence = GRU(config["sentence_unit"])
-            self.token = GRU(config["token_unit"])
+            self.text = GRU(config["text_unit"])
         elif config["layer_type"].lower() == "bigru":
-            self.sentence = Bidirectional(GRU(config["sentence_unit"]))
-            self.token = Bidirectional(GRU(config["token_unit"]))
+            self.text = Bidirectional(GRU(config["text_unit"]))
         elif config["layer_type"].lower() == "dense":
-            self.sentence = Dense(config["sentence_unit"])
-            self.token = Dense(config["token_unit"])
+            self.text = Dense(config["text_unit"])
         else:
             raise ValueError("only support (lstm | bilstm | gru | bigru) layer type")
 
         if config["enhance_feat"]:
-            self.extractor = Dense(
-                config["dense_unit"], activation="relu", name="extractor"
+            self.feat = Dense(
+                config["feat_unit"],
+                activation="relu",
+                name="feat",
             )
-            self.dropout_extractor = Dropout(config["dropout_rate"])
+            self.dropout_feat = Dropout(config["feat_dropout"])
 
         self.concatenate = Concatenate()
-        self.dropout_token = Dropout(config["dropout_rate"])
-        self.dropout_sentence = Dropout(config["dropout_rate"])
+        self.dropout_text = Dropout(config["text_dropout"])
 
+        self.extractor = Dense(config["extractor_unit"], activation="relu")
         self.out = Dense(1, activation="relu", name="regressor")
 
     def call(self, X, training=None):
@@ -66,21 +64,18 @@ class PretrainedRegressor(Model):
             else "pooler_output"
         )
 
-        X_sentence = self.embedding(X["sentence"])[part_taken]
-        X_sentence = self.sentence(X_sentence)
-        X_sentence = self.dropout_sentence(X_sentence)
+        X_text = self.embedding(X["text"])[part_taken]
+        X_text = self.text(X_text)
+        X_text = self.dropout_text(X_text, training=training)
 
-        X_token = self.embedding(X["token"])[part_taken]
-        X_token = self.token(X_token)
-        X_token = self.dropout_token(X_token, training=training)
-
-        concated = [X_sentence, X_token]
+        concated = [X_text]
 
         if self.config["enhance_feat"]:
-            X_dense = self.extractor(X["features"])
-            X_dense = self.dropout_extractor(X_dense)
-            concated.append(X_dense)
+            X_feat = self.feat(X["features"])
+            X_feat = self.dropout_feat(X_feat)
+            concated.append(X_feat)
 
         X_concatenate = self.concatenate(concated)
-        res = self.out(X_concatenate)
+        X_fin = self.extractor(X_concatenate)
+        res = self.out(X_fin)
         return res

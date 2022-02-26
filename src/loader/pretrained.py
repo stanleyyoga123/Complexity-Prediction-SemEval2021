@@ -3,14 +3,11 @@ import numpy as np
 
 from transformers import BertTokenizer, XLNetTokenizer, RobertaTokenizer
 from src.constant import Path
-from src.features import Generator
 
 
 class PretrainedLoader:
     def __init__(self, config):
         self.config = config
-        if config["enhance_feat"]:
-            self.generator = Generator(config["generator"])
 
         if config["type"] == "bert":
             self.tokenizer = BertTokenizer.from_pretrained(config["model_name"])
@@ -51,31 +48,40 @@ class PretrainedLoader:
             dev = self.dev
             test = self.test
 
-        X_train["sentence"] = dict(
-            self.tokenizer(list(train["sentence"]), **self.config["tokenizer_sentence"])
-        )
-        X_train["token"] = dict(
-            self.tokenizer(list(train["token"]), **self.config["tokenizer_token"])
-        )
-
-        X_dev["sentence"] = dict(
-            self.tokenizer(list(dev["sentence"]), **self.config["tokenizer_sentence"])
-        )
-        X_dev["token"] = dict(
-            self.tokenizer(list(dev["token"]), **self.config["tokenizer_token"])
+        X_train["text"] = dict(
+            self.tokenizer(
+                list(train["sentence"]),
+                list(train["token"]),
+                **self.config["tokenizer_config"],
+            )
         )
 
-        X_test["sentence"] = dict(
-            self.tokenizer(list(test["sentence"]), **self.config["tokenizer_sentence"])
+        X_dev["text"] = dict(
+            self.tokenizer(
+                list(dev["sentence"]),
+                list(dev["token"]),
+                **self.config["tokenizer_config"],
+            )
         )
-        X_test["token"] = dict(
-            self.tokenizer(list(test["token"]), **self.config["tokenizer_token"])
+
+        X_test["text"] = dict(
+            self.tokenizer(
+                list(test["sentence"]),
+                list(test["token"]),
+                **self.config["tokenizer_config"],
+            )
         )
 
         if self.config["enhance_feat"]:
-            X_train["features"] = self.generator(train["sentence"], train["token"])
-            X_dev["features"] = self.generator(dev["sentence"], dev["token"])
-            X_test["features"] = self.generator(test["sentence"], test["token"])
+            cols = self.config["features"].split("|")
+            if cols[0] == "all":
+                X_train["features"] = np.array(train.iloc[:, 5:])
+                X_dev["features"] = np.array(dev.iloc[:, 5:])
+                X_test["features"] = np.array(test.iloc[:, 5:])
+            else:
+                X_train["features"] = np.array(train[cols])
+                X_dev["features"] = np.array(dev[cols])
+                X_test["features"] = np.array(test[cols])
 
         y_train = np.array(train["complexity"])
         y_dev = np.array(dev["complexity"])

@@ -11,7 +11,11 @@ tf.random.set_seed(42)
 
 from tensorflow.keras.losses import MeanSquaredError
 from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau
+from tensorflow.keras.callbacks import (
+    ModelCheckpoint,
+    EarlyStopping,
+    LearningRateScheduler,
+)
 
 from src.constant import Path
 from src.utility import get_config, get_latest_version, json_to_text
@@ -20,6 +24,10 @@ from src.regressor import PretrainedRegressor
 from src.evaluator import Evaluator
 
 # from src.metrics import pearson
+
+
+def scheduler(epoch, lr):
+    return lr * tf.math.exp(-0.1)
 
 
 class Trainer:
@@ -39,70 +47,76 @@ class Trainer:
     def fit(self):
         # Load Data
         self.data = self.loader(sample=False)
+                    
+        # Set GPU
+        devices = tf.config.experimental.list_physical_devices("GPU")
+        device_names = [d.name.split("e:")[1] for d in devices]
+        config_taken = set([int(i) for i in self.config["trainer"]["gpus"].split("|")])
+        taken_gpu = []
+        for i, device_name in enumerate(device_names):
+            if i in config_taken:
+                taken_gpu.append(device_name)
+        print(f"Taken GPU: {taken_gpu}")
+        strategy = tf.distribute.MirroredStrategy(devices=taken_gpu)
 
-        self.model = PretrainedRegressor(
-            {
-                "embedding": self.config["master"],
-                **self.config["master"],
-                **self.config["regressor"],
-            }
-        )
-
-        if self.config["trainer"]["train_separately"]:
-            self.model.embedding.trainable = False
-            callbacks = [
-                EarlyStopping(
-                    patience=self.config["trainer"]["separate_train"][
-                        "early_stopping_patience"
-                    ]
-                ),
-                ReduceLROnPlateau(
-                    factor=self.config["trainer"]["separate_train"]["reduce_lr_factor"],
-                    patience=self.config["trainer"]["separate_train"][
-                        "reduce_lr_patience"
-                    ],
-                    min_lr=self.config["trainer"]["separate_train"]["reduce_lr_min"],
-                ),
-                ModelCheckpoint(
-                    filepath=os.path.join(self.folder_path, "model-best.h5"),
-                    save_best_only=True,
-                    save_weights_only=True,
-                ),
-            ]
-
-            self.model.compile(
-                loss=MeanSquaredError(),
-                optimizer=Adam(
-                    learning_rate=self.config["trainer"]["separate_train"]["lr"]
-                ),
+        with strategy.scope():
+            self.model = PretrainedRegressor(
+                {
+                    "embedding": self.config["master"],
+                    **self.config["master"],
+                    **self.config["regressor"],
+                }
             )
-            self.model.fit(
-                self.data["X_train"],
-                self.data["y_train"],
-                batch_size=self.config["trainer"]["separate_train"]["batch_size"],
-                epochs=self.config["trainer"]["separate_train"]["epochs"],
-                validation_data=(self.data["X_dev"], self.data["y_dev"]),
-                callbacks=callbacks,
-            )
-            self.model.embedding.trainable = True
+
+            if self.config["trainer"]["train_separately"]:
+                self.model.embedding.trainable = False
+                callbacks = [
+                    EarlyStopping(
+                        patience=self.config["trainer"]["separate_train"][
+                            "early_stopping_patience"
+                        ]
+                    ),
+                    LearningRateScheduler(scheduler),
+                    ModelCheckpoint(
+                        filepath=os.path.join(self.folder_path, "model-best.h5"),
+                        save_best_only=True,
+                        save_weights_only=True,
+                    ),
+                ]
+
+                self.model.compile(
+                    loss=MeanSquaredError(),
+                    optimizer=Adam(
+                        learning_rate=self.config["trainer"]["separate_train"]["lr"],
+                    ),
+                )
+
+                self.model.fit(
+                    self.data["X_train"],
+                    self.data["y_train"],
+                    batch_size=self.config["trainer"]["separate_train"]["batch_size"],
+                    epochs=self.config["trainer"]["separate_train"]["epochs"],
+                    validation_data=(self.data["X_dev"], self.data["y_dev"]),
+                    callbacks=callbacks,
+                )
+                self.model.summary()
+                self.model.embedding.trainable = True
 
         callbacks = [
             EarlyStopping(patience=self.config["trainer"]["early_stopping_patience"]),
-            ReduceLROnPlateau(
-                factor=self.config["trainer"]["reduce_lr_factor"],
-                patience=self.config["trainer"]["reduce_lr_patience"],
-                min_lr=self.config["trainer"]["reduce_lr_min"],
-            ),
+            LearningRateScheduler(scheduler),
             ModelCheckpoint(
                 filepath=os.path.join(self.folder_path, "model-best.h5"),
                 save_best_only=True,
                 save_weights_only=True,
             ),
         ]
-        self.model.compile(
-            loss=MeanSquaredError(),
-            optimizer=Adam(learning_rate=self.config["trainer"]["lr"]),
-        )
+        with strategy.scope():
+            self.model.compile(
+                loss=MeanSquaredError(),
+                optimizer=Adam(learning_rate=self.config["trainer"]["lr"]),
+            )
+
         self.model.fit(
             self.data["X_train"],
             self.data["y_train"],
@@ -112,8 +126,19 @@ class Trainer:
             callbacks=callbacks,
         )
 
+        self.model.save_weights(os.path.join(self.folder_path, "model-last.h5"))
+
     def evaluate(self):
         # Load best weights
+        self.model = PretrainedRegressor(
+            {
+                "embedding": self.config["master"],
+                **self.config["master"],
+                **self.config["regressor"],
+            }
+        )
+        sample = self.loader(sample=True)
+        self.model(sample["X_train"])
         self.model.load_weights(os.path.join(self.folder_path, "model-best.h5"))
 
         train_pred = self.model.predict(

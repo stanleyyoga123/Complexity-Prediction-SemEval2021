@@ -1,5 +1,5 @@
 from collections import Counter
-import enchant
+# import enchant
 import re
 import numpy as np
 import textstat
@@ -11,7 +11,7 @@ from nltk.stem import WordNetLemmatizer
 
 class Algorithm:
     def __init__(self):
-        self.morpheme_dict = enchant.Dict("en_US")
+        # self.morpheme_dict = enchant.Dict("en_US")
         self.cmu_dictionaryy = cmudict.dict()
         self.stopwords_dictionary = stopwords.words("english")
         self.lemmatizer = WordNetLemmatizer()
@@ -58,24 +58,24 @@ class Algorithm:
         additional = len(self.ADDITIONAL.findall(word))
         return max(1, vowel_runs - exceptions + additional)
 
-    def count_morphemes(self, sentence, word):
-        ctr = 0
+    # def count_morphemes(self, sentence, word):
+    #     ctr = 0
 
-        def tokenize(word):
-            nonlocal ctr
+    #     def tokenize(word):
+    #         nonlocal ctr
 
-            if not word:
-                return
-            for i in range(len(word), -1, -1):
-                if self.morpheme_dict.check(word[0:i]):
-                    ctr += 1
-                    st = word[i:]
-                    tokenize(st)
-                    break
+    #         if not word:
+    #             return
+    #         for i in range(len(word), -1, -1):
+    #             if self.morpheme_dict.check(word[0:i]):
+    #                 ctr += 1
+    #                 st = word[i:]
+    #                 tokenize(st)
+    #                 break
 
-        tokenize(word)
+    #     tokenize(word)
 
-        return ctr if ctr != 0 else 1
+    #     return ctr if ctr != 0 else 1
 
     def count_zipf(self, sentence, word):
         return zipf_frequency(word, "en")

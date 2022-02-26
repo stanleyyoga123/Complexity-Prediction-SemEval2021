@@ -2,19 +2,19 @@ import os
 
 
 class Path:
-    RESOURCES = "resources"
-    DATA = "data"
+    RESOURCES = "/raid/data/m13518122/resources"
+    DATA = "/raid/data/m13518122/data"
     SCRATCH = "scratch"
     PRETRAINED = "pretrained"
-    MODEL = "models"
+    MODEL = "/raid/data/m13518122/models"
 
-    TRAIN_SINGLE = os.path.join(DATA, "single_train.csv")
-    DEV_SINGLE = os.path.join(DATA, "single_dev.csv")
-    TEST_SINGLE = os.path.join(DATA, "single_test.csv")
+    TRAIN_SINGLE = os.path.join(DATA, "scaled-enhanced-single-train.csv")
+    DEV_SINGLE = os.path.join(DATA, "scaled-enhanced-single-dev.csv")
+    TEST_SINGLE = os.path.join(DATA, "scaled-enhanced-single-test.csv")
 
-    TRAIN_MULTI = os.path.join(DATA, "multi_train.csv")
-    DEV_MULTI = os.path.join(DATA, "multi_dev.csv")
-    TEST_MULTI = os.path.join(DATA, "multi_test.csv")
+    TRAIN_MULTI = os.path.join(DATA, "scaled-enhanced-multi-train.csv")
+    DEV_MULTI = os.path.join(DATA, "scaled-enhanced-multi-dev.csv")
+    TEST_MULTI = os.path.join(DATA, "scaled-enhanced-multi-test.csv")
 
     CONFIG_SCRATCH = os.path.join(RESOURCES, "scratch_config.yaml")
     CONFIG_PRETRAINED = os.path.join(RESOURCES, "pretrained_config.yaml")
