@@ -61,7 +61,7 @@ class Trainer:
 
         self.model = ScratchRegressor(
             {
-                # "embedding": self.embedder,
+                "embedding": self.embedder,
                 **self.config["regressor"],
                 **self.config["master"],
             }

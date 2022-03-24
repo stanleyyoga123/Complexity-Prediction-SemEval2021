@@ -1,5 +1,8 @@
 import tensorflow as tf
+
 tf.random.set_seed(42)
+
+import numpy as np
 
 from tensorflow.keras import Model
 from tensorflow.keras.layers import (
@@ -9,7 +12,7 @@ from tensorflow.keras.layers import (
     GRU,
     Dropout,
     Concatenate,
-    Bidirectional
+    Bidirectional,
 )
 
 
@@ -34,9 +37,11 @@ class ScratchRegressor(Model):
             self.token = Bidirectional(GRU(config["token_unit"]))
         else:
             raise ValueError("only support (lstm | bilstm | gru | bigru) layer type")
-        
+
         if config["enhance_feat"]:
-            self.extractor = Dense(config["dense_unit"], activation="relu", name="extractor")
+            self.extractor = Dense(
+                config["dense_unit"], activation="relu", name="extractor"
+            )
 
         self.concatenate = Concatenate()
         self.dropout = Dropout(config["dropout_rate"])
@@ -44,11 +49,9 @@ class ScratchRegressor(Model):
         self.dense = Dense(1, activation="relu", name="regressor")
 
     def call(self, X, training=None):
-        # X_sentence = self.embedding(X["sentence"])
         X_sentence = self.sentence(X["sentence"])
         X_sentence = self.dropout(X_sentence)
 
-        # X_token = self.embedding(X["token"])
         X_token = self.token(X["token"])
         X_token = self.dropout(X_token, training=training)
 

@@ -36,9 +36,10 @@ class Word2VecEmbedder:
     def add_tokenizer(self, tokenizer):
         self.tokenizer = tokenizer
 
-    def __call__(self, batch_tokens):
+    def __call__(self, inputs):
         res = []
-        for tokens in tqdm(batch_tokens):
+        for tokens in inputs:
+            tokens = tokens
             embs = []
             for token in tokens:
                 try:
@@ -50,9 +51,6 @@ class Word2VecEmbedder:
                         emb = np.zeros(self.config["vector_size"])
                 except KeyError:
                     emb = np.zeros(self.config["vector_size"])
-                embs.append(emb)
-            res.append(embs)
-
-        res = np.array(res)
-
-        return np.array(res)
+                embs.append(np.array(emb))
+            res.append(np.array(embs))
+        return np.array(np.array(res))

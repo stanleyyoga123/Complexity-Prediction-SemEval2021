@@ -1,7 +1,6 @@
 import tensorflow as tf
-import numpy as np
-from tqdm import tqdm
 
+import numpy as np
 from gensim.models import FastText
 
 
@@ -14,9 +13,6 @@ class FastTextEmbedder:
 
     def fit(self, sentences):
         self.embedder = FastText(sentences=sentences, **self.config)
-
-    def get_layer(self):
-        return self.embedder
 
     def get_embedding_config(self, tokenizer):
         weights = np.zeros((tokenizer.num_words, self.config["vector_size"]))
@@ -33,9 +29,10 @@ class FastTextEmbedder:
     def add_tokenizer(self, tokenizer):
         self.tokenizer = tokenizer
 
-    def __call__(self, batch_tokens):
+    def __call__(self, inputs):
         res = []
-        for tokens in tqdm(batch_tokens):
+        for tokens in inputs:
+            tokens = tokens
             embs = []
             for token in tokens:
                 try:
@@ -47,9 +44,6 @@ class FastTextEmbedder:
                         emb = np.zeros(self.config["vector_size"])
                 except KeyError:
                     emb = np.zeros(self.config["vector_size"])
-                embs.append(emb)
-            res.append(embs)
-
-        res = np.array(res)
-
-        return np.array(res)
+                embs.append(np.array(emb))
+            res.append(np.array(embs))
+        return np.array(np.array(res))
