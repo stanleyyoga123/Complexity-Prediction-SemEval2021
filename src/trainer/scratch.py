@@ -19,16 +19,15 @@ from src.embedder import Word2VecEmbedder, FastTextEmbedder
 from src.loader import ScratchLoader
 from src.regressor import ScratchRegressor
 from src.evaluator import Evaluator
-# from src.metrics import pearson
+from src.callbacks import BestElbow
 
 
 class Trainer:
     def __init__(self, config_path, embedder, prefix):
         self.config = get_config(config_path)
         self.prefix = prefix
-        self.loader = ScratchLoader(
-            {**self.config["master"], **self.config["loader"]}
-        )
+        self.loader = ScratchLoader({**self.config["master"], **self.config["loader"]})
+        self.embedder_name = embedder
         if embedder == "word2vec":
             self.embedder = Word2VecEmbedder(self.config["word2vec"])
         elif embedder == "fasttext":
@@ -42,18 +41,27 @@ class Trainer:
 
     def fit(self):
         # Load Data
-        self.data = self.loader()
+        self.data = self.loader(sample=False)
 
         # Train Word2Vec
         self.embedder.fit(self.data["train_embedder"])
 
         # Embedding config
-        embedding_config = self.embedder.get_embedding_config(self.loader.tokenizer)
-        embedding_config["trainable"] = self.config["regressor"]["trainable_embedding"]
+        # embedding_config = self.embedder.get_embedding_config(self.loader.tokenizer)
+        # embedding_config["trainable"] = self.config["regressor"]["trainable_embedding"]
+        # embedding = self.embedder.get_layer()
+
+        # Update Train Vectors
+        self.embedder.add_tokenizer(self.loader.tokenizer)
+        data_keys = ["X_train", "X_test", "X_dev"]
+        type_keys = ["sentence", "token"]
+        for data_key in data_keys:
+            for type_key in type_keys:
+                self.data[data_key][type_key] = self.embedder(self.data[data_key][type_key])
 
         self.model = ScratchRegressor(
             {
-                "embedding": embedding_config,
+                # "embedding": self.embedder,
                 **self.config["regressor"],
                 **self.config["master"],
             }
@@ -68,9 +76,13 @@ class Trainer:
                 min_lr=self.config["trainer"]["reduce_lr_min"],
             ),
             ModelCheckpoint(
-                filepath=os.path.join(self.folder_path, "model-best.h5"),
+                filepath=os.path.join(self.folder_path, "model-best-val-loss.h5"),
                 save_best_only=True,
                 save_weights_only=True,
+            ),
+            BestElbow(
+                filepath=os.path.join(self.folder_path, "model-best-elbow.h5"),
+                upper_bound=0.015,
             ),
         ]
 
@@ -191,7 +203,6 @@ class Trainer:
             msg += f"Dev\n{json_to_text(dev_eval_multi)}\n\n"
             msg += f"Test\n{json_to_text(test_eval_multi)}"
             f.write(msg)
-
 
 
 def main(config, embedder, prefix):

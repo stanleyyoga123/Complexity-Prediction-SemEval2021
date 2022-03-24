@@ -47,50 +47,59 @@ class ScratchLoader:
     def __convert_pad(self, texts, maxlen):
         return self.__pad(self.__convert(texts), maxlen)
 
-    def __tokenize(self):
+    def __tokenize(self, sample):
         X_train, X_dev, X_test = {}, {}, {}
 
+        if sample:
+            train = self.train.sample(5)
+            dev = self.dev.sample(5)
+            test = self.test.sample(5)
+        else:
+            train = self.train
+            dev = self.dev
+            test = self.test
+
         X_train["sentence"] = self.__convert_pad(
-            self.train["sentence"], self.config["sentence_maxlen"]
+            train["sentence"], self.config["sentence_maxlen"]
         )
         X_train["token"] = self.__convert_pad(
-            self.train["token"], self.config["token_maxlen"]
+            train["token"], self.config["token_maxlen"]
         )
 
         X_dev["sentence"] = self.__convert_pad(
-            self.dev["sentence"], self.config["sentence_maxlen"]
+            dev["sentence"], self.config["sentence_maxlen"]
         )
         X_dev["token"] = self.__convert_pad(
-            self.dev["token"], self.config["token_maxlen"]
+            dev["token"], self.config["token_maxlen"]
         )
 
         X_test["sentence"] = self.__convert_pad(
-            self.test["sentence"], self.config["sentence_maxlen"]
+            test["sentence"], self.config["sentence_maxlen"]
         )
         X_test["token"] = self.__convert_pad(
-            self.test["token"], self.config["token_maxlen"]
+            test["token"], self.config["token_maxlen"]
         )
 
         if self.config["enhance_feat"]:
             cols = self.config["features"].split("|")
             if cols[0] == "all":
-                X_train["features"] = np.array(self.train.iloc[:, 5:])
-                X_dev["features"] = np.array(self.dev.iloc[:, 5:])
-                X_test["features"] = np.array(self.test.iloc[:, 5:])
+                X_train["features"] = np.array(train.iloc[:, 5:])
+                X_dev["features"] = np.array(dev.iloc[:, 5:])
+                X_test["features"] = np.array(test.iloc[:, 5:])
             else:
-                X_train["features"] = np.array(self.train[cols])
-                X_dev["features"] = np.array(self.dev[cols])
-                X_test["features"] = np.array(self.test[cols])    
+                X_train["features"] = np.array(train[cols])
+                X_dev["features"] = np.array(dev[cols])
+                X_test["features"] = np.array(test[cols])    
 
-        y_train = np.array(self.train["complexity"])
-        y_dev = np.array(self.dev["complexity"])
-        y_test = np.array(self.test["complexity"])
+        y_train = np.array(train["complexity"])
+        y_dev = np.array(dev["complexity"])
+        y_test = np.array(test["complexity"])
 
         train_embedder = np.array(
             [
                 sentence.split()
                 for sentence in self.tokens_to_texts(
-                    self.__convert(self.train["sentence"])
+                    self.__convert(train["sentence"])
                 )
             ]
         )
@@ -103,15 +112,15 @@ class ScratchLoader:
             "y_train": y_train,
             "y_test": y_test,
             "y_dev": y_dev,
-            "train": self.train,
-            "dev": self.dev,
-            "test": self.test
+            "train": train,
+            "dev": dev,
+            "test": test
         }
 
     def tokens_to_texts(self, tokens):
         return self.tokenizer.sequences_to_texts(tokens)
 
-    def __call__(self):
+    def __call__(self, sample=False):
         self.__drop_null()
         self.__fit()
-        return self.__tokenize()
+        return self.__tokenize(sample)

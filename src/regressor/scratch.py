@@ -17,7 +17,8 @@ class ScratchRegressor(Model):
     def __init__(self, config):
         super(ScratchRegressor, self).__init__()
         self.config = config
-        self.embedding = Embedding(**config["embedding"])
+        # self.embedding = Embedding(**config["embedding"])
+        # self.embedding = config["embedding"]
 
         if config["layer_type"].lower() == "lstm":
             self.sentence = LSTM(config["sentence_unit"])
@@ -43,12 +44,12 @@ class ScratchRegressor(Model):
         self.dense = Dense(1, activation="relu", name="regressor")
 
     def call(self, X, training=None):
-        X_sentence = self.embedding(X["sentence"])
-        X_sentence = self.sentence(X_sentence)
+        # X_sentence = self.embedding(X["sentence"])
+        X_sentence = self.sentence(X["sentence"])
         X_sentence = self.dropout(X_sentence)
 
-        X_token = self.embedding(X["token"])
-        X_token = self.token(X_token)
+        # X_token = self.embedding(X["token"])
+        X_token = self.token(X["token"])
         X_token = self.dropout(X_token, training=training)
 
         concated = [X_sentence, X_token]

@@ -22,6 +22,7 @@ from src.utility import get_config, get_latest_version, json_to_text
 from src.loader import PretrainedLoader
 from src.regressor import PretrainedRegressor
 from src.evaluator import Evaluator
+from src.callbacks import BestElbow
 
 # from src.metrics import pearson
 
@@ -47,7 +48,7 @@ class Trainer:
     def fit(self):
         # Load Data
         self.data = self.loader(sample=False)
-                    
+        
         # Set GPU
         devices = tf.config.experimental.list_physical_devices("GPU")
         device_names = [d.name.split("e:")[1] for d in devices]
@@ -78,10 +79,14 @@ class Trainer:
                     ),
                     LearningRateScheduler(scheduler),
                     ModelCheckpoint(
-                        filepath=os.path.join(self.folder_path, "model-best.h5"),
+                        filepath=os.path.join(self.folder_path, "model-best-val-loss.h5"),
                         save_best_only=True,
                         save_weights_only=True,
                     ),
+                    BestElbow(
+                        filepath=os.path.join(self.folder_path, "model-best-elbow.h5"),
+                        upper_bound=0.008,
+                    )
                 ]
 
                 self.model.compile(
@@ -110,6 +115,9 @@ class Trainer:
                 save_best_only=True,
                 save_weights_only=True,
             ),
+            BestElbow(
+                filepath=os.path.join(self.folder_path, "model-best-elbow.h5")
+            )
         ]
         with strategy.scope():
             self.model.compile(
@@ -139,7 +147,7 @@ class Trainer:
         )
         sample = self.loader(sample=True)
         self.model(sample["X_train"])
-        self.model.load_weights(os.path.join(self.folder_path, "model-best.h5"))
+        self.model.load_weights(os.path.join(self.folder_path, "model-best-elbow.h5"))
 
         train_pred = self.model.predict(
             self.data["X_train"],

@@ -2,11 +2,17 @@ import os
 
 
 class Path:
-    RESOURCES = "/raid/data/m13518122/resources"
-    DATA = "/raid/data/m13518122/data"
+    # RESOURCES = "/raid/data/m13518122/resources"
+    # DATA = "/raid/data/m13518122/data"
+    # SCRATCH = "scratch"
+    # PRETRAINED = "pretrained"
+    # MODEL = "/raid/data/m13518122/models"
+
+    RESOURCES = "resources"
+    DATA = "data"
     SCRATCH = "scratch"
     PRETRAINED = "pretrained"
-    MODEL = "/raid/data/m13518122/models"
+    MODEL = "models"
 
     TRAIN_SINGLE = os.path.join(DATA, "scaled-enhanced-single-train.csv")
     DEV_SINGLE = os.path.join(DATA, "scaled-enhanced-single-dev.csv")
